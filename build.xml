@@ -1,0 +1,112 @@
+<project name="Migration Script" basedir="." xmlns:sf="antlib:com.salesforce" xmlns:ac="antlib:net.sf.antcontrib">
+
+	<property file="build.properties" />
+
+	<target name="retrieve">
+		<sf:retrieve serverurl="${sf.serverurl}" username="${sf.username}" password="${sf.password}" retrieveTarget="${Dir}" unpackaged="${XmlPackage}" />
+	</target>
+
+	<target name="report">
+		<replace dir="${Dir}" token='xmlns="http://soap.sforce.com/2006/04/metadata"' value="" />
+		
+		<!-- Create the HTML files for SharingRules -->
+		<ac:foreach target="xsltransformSharingRule" param="file" parallel="true">
+			<fileset dir="${Dir}/sharingRules">
+				<include name="**/*.sharingRules" />
+			</fileset>
+		</ac:foreach>
+
+		<!-- Create the HTML files for Groups -->
+		<ac:foreach target="xsltransformGroup" param="file" parallel="true">
+			<fileset dir="${Dir}/groups">
+				<include name="**/*.group" />
+			</fileset>
+		</ac:foreach>
+
+		<!-- Create the HTML files for Roles -->
+		<ac:foreach target="xsltransformRole" param="file" parallel="true">
+			<fileset dir="${Dir}/roles">
+				<include name="**/*.role" />
+			</fileset>
+		</ac:foreach>
+
+		<!-- Create the HTML files for custom objects -->
+		<!--<ac:foreach target="xsltransformObject" param="file" parallel="true">
+			<fileset dir="${Dir}/objects">
+				<include name="**/*.object" />
+			</fileset>
+		</ac:foreach>-->
+		
+		<!-- Create the HTML files for profiles -->
+		<!--<ac:foreach target="xsltransformProfile" param="file" parallel="true">
+			<fileset dir="${Dir}/profiles">
+				<include name="**/*.profile" />
+			</fileset>
+		</ac:foreach>-->
+
+		<!-- Create the HTML files for workflows -->
+		<!--<ac:foreach target="xsltransformWorkflow" param="file" parallel="true">
+			<fileset dir="${Dir}/workflows">
+				<include name="**/*.workflow" />
+			</fileset>
+		</ac:foreach>-->
+
+		<!-- Create the report file -->
+		<delete file="${Reportfile}" />
+		<concat destfile="${Reportfile}" append="true">
+			<fileset dir="${Dir}">
+				<include name="**/*.html" />
+			</fileset>
+		</concat>
+		<replace dir="${Reportfile}" token='&lt;?xml version="1.0"?&gt;' value="" />
+		
+		<!-- Clean the previous html files created -->
+		<delete>
+			<fileset dir="${Dir}">
+				<include name="**/*.html" />
+			</fileset>
+		</delete>
+    </target>
+	
+	<target name="xsltransformSharingRule">
+		<xsltransform file="${file}" extension="sharingrule" stylesheetfile="${StylesheetDir}/SharingRules.xslt" />
+	</target>
+
+	<target name="xsltransformGroup">
+		<xsltransform file="${file}" extension="group" stylesheetfile="${StylesheetDir}/Groups.xslt" />
+	</target>
+
+	<target name="xsltransformRole">
+		<xsltransform file="${file}" extension="role" stylesheetfile="${StylesheetDir}/Roles.xslt" />
+	</target>
+
+	<target name="xsltransformObject">
+		<xsltransform file="${file}" extension="object" stylesheetfile="${StylesheetDir}/CustomObjects.xslt" />
+	</target>
+
+	<target name="xsltransformProfile">
+		<xsltransform file="${file}" extension="profile" stylesheetfile="${StylesheetDir}/Profiles.xslt" />
+	</target>
+
+	<target name="xsltransformWorkflow">
+		<xsltransform file="${file}" extension="profile" stylesheetfile="${StylesheetDir}/Workflows.xslt" />
+	</target>
+
+	<macrodef name="xsltransform">
+		<attribute name="file" />
+		<attribute name="extension" />
+		<attribute name="stylesheetfile" />
+		<sequential>
+			<exec executable="xsltproc">
+				<arg value="-o" />
+				<arg value="@{file}.html" />
+				<arg value="@{stylesheetfile}" />
+				<arg value="@{file}" />
+			</exec>
+			<ac:var name="filename" unset="true"/>
+			<basename property="filename" file="@{file}" suffix=".@{extension}" />
+			<replace file="@{file}.html" token='%%FILE%%' value="${filename}" />
+		</sequential>
+	</macrodef>
+
+</project>
