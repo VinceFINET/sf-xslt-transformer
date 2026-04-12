@@ -29,4 +29,4 @@ You can log any issues and new ideas in our tracker: https://github.com/VinceFIN
 
 ## License
 
-OrgCheck is available under the [MIT license](LICENSE.md)
+sf-xslt-transformer is available under the [MIT license](LICENSE.md)
